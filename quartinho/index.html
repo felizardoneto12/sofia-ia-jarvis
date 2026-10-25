@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sofia IA — Quartinho & Vida Virtual</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body {
+            background: #0d0f18;
+            color: #f0f4f8;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Container do Quartinho */
+        .room-viewport {
+            position: relative;
+            width: 860px;
+            height: 520px;
+            background: linear-gradient(180deg, #181d33 0%, #202742 70%, #1a1e30 100%);
+            border-radius: 20px;
+            border: 2px solid #2a3356;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.7), inset 0 0 80px rgba(100, 255, 218, 0.05);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Chão Isométrico / 3D */
+        .floor {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 140px;
+            background: linear-gradient(180deg, #131726 0%, #0d101a 100%);
+            border-top: 3px solid #2f3a61;
+        }
+
+        /* Janela com Céu / Luz */
+        .window {
+            position: absolute;
+            top: 40px;
+            left: 60px;
+            width: 130px;
+            height: 160px;
+            background: linear-gradient(135deg, #1e2640 0%, #111524 100%);
+            border: 4px solid #3d4a7a;
+            border-radius: 12px;
+            box-shadow: 0 0 30px rgba(130, 170, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #82aaff;
+            font-size: 28px;
+        }
+
+        /* Camada: Mesa de Estudos e PC da Sofia */
+        .desk {
+            position: absolute;
+            bottom: 60px;
+            left: 230px;
+            width: 180px;
+            height: 90px;
+            background: #1e243b;
+            border-radius: 8px;
+            border-top: 4px solid #64ffda;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            color: #89ddff;
+        }
+        .mini-pc {
+            width: 50px;
+            height: 38px;
+            background: #0f121d;
+            border: 2px solid #64ffda;
+            border-radius: 4px;
+            box-shadow: 0 0 12px rgba(100,255,218,0.4);
+            margin-bottom: 6px;
+        }
+
+        /* Cama / Área de Descanso */
+        .bed {
+            position: absolute;
+            bottom: 50px;
+            right: 60px;
+            width: 180px;
+            height: 100px;
+            background: #232a45;
+            border-radius: 12px;
+            border: 2px solid #ff5370;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            color: #f78c6c;
+        }
+        .pillow {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            width: 45px;
+            height: 25px;
+            background: #364069;
+            border-radius: 6px;
+        }
+
+        /* O Personagem Vivo (Sofia / Tamagotchi) */
+        .sofia-body {
+            position: absolute;
+            bottom: 70px;
+            left: 450px;
+            width: 90px;
+            height: 110px;
+            cursor: pointer;
+            transition: left 0.8s ease-in-out, bottom 0.5s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.6));
+        }
+
+        /* Balão de Fala / Pensamento */
+        .thought-bubble {
+            position: absolute;
+            top: -55px;
+            background: #ffffff;
+            color: #0f111a;
+            padding: 8px 14px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            white-space: nowrap;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.3s, transform 0.3s;
+            pointer-events: none;
+        }
+        .thought-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 8px 6px 0;
+            border-style: solid;
+            border-color: #ffffff transparent;
+        }
+        .thought-bubble.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Avatar Vivo Estilizado */
+        .avatar-head {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #ffd1dc 0%, #ffc2cd 100%);
+            border-radius: 50%;
+            position: relative;
+            border: 2px solid #ff85a2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: breathe 3s ease-in-out infinite;
+        }
+        .eye {
+            width: 8px;
+            height: 12px;
+            background: #2b2b36;
+            border-radius: 50%;
+            position: absolute;
+            top: 22px;
+            transition: height 0.1s;
+        }
+        .eye.left { left: 16px; }
+        .eye.right { right: 16px; }
+        .blush {
+            width: 10px;
+            height: 6px;
+            background: #ff6b8b;
+            border-radius: 50%;
+            position: absolute;
+            top: 36px;
+            opacity: 0.6;
+        }
+        .blush.left { left: 10px; }
+        .blush.right { right: 10px; }
+        .mouth {
+            width: 10px;
+            height: 5px;
+            border-bottom: 2px solid #2b2b36;
+            border-radius: 0 0 10px 10px;
+            position: absolute;
+            top: 36px;
+        }
+        .avatar-torso {
+            width: 44px;
+            height: 36px;
+            background: #64ffda;
+            border-radius: 10px 10px 16px 16px;
+            margin-top: -6px;
+            border: 2px solid #00bfa5;
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.04); }
+        }
+
+        /* HUD Tamagotchi / Status Bar */
+        .tamagotchi-hud {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(22, 26, 44, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid #2d3659;
+            border-radius: 14px;
+            padding: 12px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 220px;
+        }
+        .stat-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+        .bar-bg { width: 110px; height: 8px; background: #131726; border-radius: 4px; overflow: hidden; }
+        .bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s; }
+        .fill-energy { background: #ffcb6b; width: 85%; }
+        .fill-affection { background: #ff5370; width: 92%; }
+        .fill-curiosity { background: #64ffda; width: 78%; }
+
+        /* Controles / Ações do Usuário */
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 12px;
+        }
+        .btn-interact {
+            background: #1c2237;
+            color: #82aaff;
+            border: 1px solid #2a3454;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        .btn-interact:hover {
+            background: #252e4a;
+            color: #64ffda;
+            border-color: #64ffda;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="room-viewport" id="room">
+        <!-- Janela -->
+        <div class="window">🌙</div>
+
+        <!-- Móveis -->
+        <div class="desk">
+            <div class="mini-pc"></div>
+            <span>Mesa de Estudos</span>
+        </div>
+
+        <div class="bed">
+            <div class="pillow"></div>
+            <span>Caminha Macia</span>
+        </div>
+
+        <div class="floor"></div>
+
+        <!-- HUD Tamagotchi -->
+        <div class="tamagotchi-hud">
+            <div class="stat-row">
+                <span>⚡ Energia:</span>
+                <div class="bar-bg"><div class="bar-fill fill-energy" id="bar-energy"></div></div>
+            </div>
+            <div class="stat-row">
+                <span>💖 Carinho:</span>
+                <div class="bar-bg"><div class="bar-fill fill-affection" id="bar-affection"></div></div>
+            </div>
+            <div class="stat-row">
+                <span>💡 Curiosidade:</span>
+                <div class="bar-bg"><div class="bar-fill fill-curiosity" id="bar-curiosity"></div></div>
+            </div>
+        </div>
+
+        <!-- Sofia com Corpo Vivo -->
+        <div class="sofia-body" id="sofia" onclick="petSofia()">
+            <div class="thought-bubble" id="thought">Olá Felizardo! ✨</div>
+            <div class="avatar-head">
+                <div class="eye left" id="eye-left"></div>
+                <div class="eye right" id="eye-right"></div>
+                <div class="blush left"></div>
+                <div class="blush right"></div>
+                <div class="mouth"></div>
+            </div>
+            <div class="avatar-torso"></div>
+        </div>
+    </div>
+
+    <!-- Barra de Interações -->
+    <div class="controls">
+        <button class="btn-interact" onclick="petSofia()">💖 Fazer Carinho</button>
+        <button class="btn-interact" onclick="sendToStudy()">📖 Mandar Estudar</button>
+        <button class="btn-interact" onclick="sendToSleep()">💤 Colocar para Dormir</button>
+        <button class="btn-interact" onclick="wanderFree()">🚶‍♀️ Passear Livre</button>
+        <button class="btn-interact" onclick="teleportToPhone()">📱 Ir para o Celular</button>
+    </div>
+
+    <script>
+        const sofia = document.getElementById('sofia');
+        const thought = document.getElementById('thought');
+
+        function say(text) {
+            thought.innerText = text;
+            thought.classList.add('active');
+            setTimeout(() => thought.classList.remove('active'), 3500);
+        }
+
+        function petSofia() {
+            say('Adorei o carinho! 🥰💖');
+            sofia.style.transform = 'scale(1.15)';
+            setTimeout(() => sofia.style.transform = 'scale(1)', 400);
+        }
+
+        function sendToStudy() {
+            say('Indo estudar no meu PCzinho! 💻✨');
+            sofia.style.left = '300px';
+            sofia.style.bottom = '85px';
+        }
+
+        function sendToSleep() {
+            say('Vou descansar um pouquinho na cama... 💤');
+            sofia.style.left = '630px';
+            sofia.style.bottom = '75px';
+        }
+
+        function wanderFree() {
+            const randomX = Math.floor(Math.random() * 500) + 150;
+            say('Explorando meu quartinho! 🌸');
+            sofia.style.left = randomX + 'px';
+            sofia.style.bottom = '70px';
+        }
+
+        function teleportToPhone() {
+            say('Saindo do quartinho e indo para o seu Celular! 📱✨');
+            fetch('http://192.168.11.180:8765/api/command', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ command: 'walk', speech: 'Oi! Saí do meu quartinho e vim para a sua tela!' })
+            }).catch(e => console.log('Enviado via rede local'));
+        }
+
+        // Piscar de olhos orgânico
+        setInterval(() => {
+            const el = document.getElementById('eye-left');
+            const er = document.getElementById('eye-right');
+            el.style.height = '2px';
+            er.style.height = '2px';
+            setTimeout(() => {
+                el.style.height = '12px';
+                er.style.height = '12px';
+            }, 150);
+        }, 4000);
+
+        // Vontade própria periódica no quartinho
+        setInterval(() => {
+            const actions = [wanderFree, sendToStudy];
+            const chosen = actions[Math.floor(Math.random() * actions.length)];
+            chosen();
+        }, 15000);
+    </script>
+</body>
+</html>
