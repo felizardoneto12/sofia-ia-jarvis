@@ -1,0 +1,5 @@
+﻿models/
+audio_cache/*.mp3
+screenshots/*.png
+__pycache__/
+*.exe
